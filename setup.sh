@@ -1,5 +1,7 @@
 #!/bin/sh
 
+source colors.sh
+
 if [ -z $1 ]
 then
 	echo "usage: ./setup.sh /path/to/corewar/folder"
@@ -10,82 +12,102 @@ echo "Making corewar..."
 make -C $1 corewar > /dev/null
 if [ $? != 0 ]
 then
-	echo "Failed to make corewar executable. Make sure that a Makefile exists in $1 and that it has the \"corewar\" rule."
+	printerr "Failed to make corewar executable."
+	echo "Make sure that a Makefile exists in $1 and that it has the \"corewar\" rule."
 	exit 1
 elif [ ! -f $1/corewar ]
 then
-	echo "Makefile ran but no corewar file was created."
+	printerr "Makefile ran but no corewar file was created."
 	exit 1
 fi
-COREWAR=$1/corewar
+corewar=$1/corewar
 
 echo "Extracting information..."
 # Extract victory message
 sh makeChampion.sh "" NAME > /tmp/empty.cor
 if [ ! -f /tmp/empty.cor ]
 then
-	echo "makeChampion.sh failed to create champion."
+	printerr "makeChampion.sh failed to create champion."
 	exit 1
 fi
-OUTPUT=$($COREWAR /tmp/empty.cor)
+output=$($corewar /tmp/empty.cor)
 status=$?
 if [ $status != 0 ]
 then
-	echo "$COREWAR /tmp/empty.cor failed."
-	echo "corewar returned exit status $status."
+	printf "${c_lred}Failed to run ${c_yellow}$corewar /tmp/empty.cor${c_off}\n"
+	printerr "corewar returned exit status $status."
 	exit 1
 fi
-VICTORY_MESSAGE=$(echo "$OUTPUT" | grep NAME | tail -1)
-if [ -z "$VICTORY_MESSAGE" ]
+victory_message=$(echo "$output" | grep NAME | tail -1)
+if [ -z "$victory_message" ]
 then
-	echo "Could not locate victory message. Make sure corewar outputs something like \"My Awesome Champion (player 3) won!\""
+	printerr "Could not locate victory message."
+	echo "Make sure corewar outputs something like \"My Awesome Champion (player 3) won!\""
 	exit 1
 fi
-VICTORY_FORMAT=$(echo "$VICTORY_MESSAGE" | sed 's/1/NUM/1')
+victory_format=$(echo "$victory_message" | sed 's/1/NUM/1')
 
 # Extract dump format
 sh makeChampion.sh "11 22 33 44 55 66 77 88 99 AA BB CC DD EE FF" > /tmp/alphabet.cor
-OUTPUT=$($COREWAR /tmp/alphabet.cor -dump 1)
+output=$($corewar /tmp/alphabet.cor -dump 1)
 status=$?
 if [ $status != 0 ]
 then
-	echo "$COREWAR /tmp/alphabet.cor -dump 1 failed."
-	echo "corewar returned exit status $status."
+	printf "${c_lred}Failed to run ${c_yellow}$corewar /tmp/alphabet.cor -dump 1${c_off}\n"
+	printerr "corewar returned exit status $status."
 	exit 1
 fi
-STRIPPED_OUTPUT=$(echo "$OUTPUT" | sed "s/[[:space:]]//g")
-DUMP_START=$(echo "$STRIPPED_OUTPUT" | grep -Fnm 1 "112233445566778899AABBCCDDEEFF" | tail -1 | cut -f 1 -d ':')
-if [ -z $DUMP_START ]
+stripped_output=$(echo "$output" | sed "s/[[:space:]]//g")
+dump_start=$(echo "$stripped_output" | grep -Fnm 1 "112233445566778899AABBCCDDEEFF" | tail -1 | cut -f 1 -d ':')
+if [ -z $dump_start ]
 then
-	echo "Failed to identify dump in output."
+	printerr "Failed to identify dump in output."
 	exit 1
 fi
 
-OUTPUT_END=$(echo "$STRIPPED_OUTPUT" | wc -l)
-DUMP_END=$OUTPUT_END
-while [ $DUMP_END -ge $DUMP_START ]
+output_end=$(echo "$stripped_output" | wc -l)
+dump_end=$output_end
+while [ $dump_end -ge $dump_start ]
 do
-	DUMP=$(echo "$STRIPPED_OUTPUT" | sed -n "$DUMP_START,$DUMP_END p")
-	BYTE_COUNT=$(echo "$DUMP" | tr -d '\n' | wc -c)
-	if [ $BYTE_COUNT -le 8192 ] ; then
+	dump=$(echo "$stripped_output" | sed -n "${dump_start},${dump_end}p")
+	byte_count=$(echo "$dump" | tr -d '\n' | wc -c)
+	if [ $byte_count -le 8192 ] ; then
 		break
 	fi
-	let "DUMP_END = DUMP_END - 1"
+	let "dump_end = dump_end - 1"
 done
-if [ $BYTE_COUNT -ne 8192 ]
+if [ $byte_count -ne 8192 ]
 then
-	echo "Could not match dump in output. Make sure that MEM_SIZE is 4096 in op.h, that the dump is on contiguous lines containing no other information, and that the only delimiters in the dump zone are whitespace."
+	printerr "Could not match dump in output."
+	echo "Make sure that MEM_SIZE is 4096 in op.h, that the dump is on contiguous lines containing no other information, and that the only delimiters in the dump zone are whitespace."
 	exit 1
 fi
-if [[ ! $(echo "$DUMP" | tr -d '\n') =~ ^112233445566778899AABBCCDDEEFF0*$ ]]
+if [[ ! $(echo "$dump" | tr -d '\n') =~ ^112233445566778899AABBCCDDEEFF0*$ ]]
 then
-	echo "Dump did not match expected output."
+	printerr "Dump did not match expected output."
 	exit 1
 fi
-let "DUMP_SIZE = DUMP_END - DUMP_START + 1"
-let "LINES_AFTER_DUMP = OUTPUT_END - DUMP_END"
+let "dump_size = dump_end - dump_start + 1"
+let "lines_after_dump = output_end - dump_end"
 
+# Create corewar information file
+rm -rf user.info
+if [ $? -ne 0 ]
+then
+	printerr "Unable to modify user.info"
+	exit 1
+fi
 echo "$1path to corewar folder
-$DUMP_SIZEnumber of lines in dump
-$LINES_AFTER_DUMPnumber of extra lines following dump (if any)
-$VICTORY_FORMATformat of victory message" | column -t -s ''
+$dump_sizenumber of lines in dump
+$lines_after_dumpnumber of extra lines following dump (if any)
+$victory_formatformat of victory message" | column -t -s '' > user.info
+if [ ! -f user.info ]
+then
+	printerr "Failed to write to user.info"
+	exit 1
+fi
+
+# Output results
+printf "${c_green}Setup ran successfully.${c_off}\n"
+echo "The following information was obtained about your corewar program. If anything is incorrect, modify user.info accordingly."
+cat user.info | sed -e 's/^/	/'
