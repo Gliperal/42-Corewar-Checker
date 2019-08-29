@@ -39,6 +39,11 @@ t_standout=$(tput smso)
 t_standout_off=$(tput rmso)
 t_off=$(tput sgr0)
 
+function echoerr
+{
+	echo "$1" >&2
+}
+
 function printerr
 {
 	printf "${c_red}${t_bold}Error:${t_off} ${c_red}$1${c_off}\n" >&2

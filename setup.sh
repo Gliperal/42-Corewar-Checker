@@ -2,9 +2,14 @@
 
 source colors.sh
 
-if [ -z $1 ]
+if [ -z "$1" ]
 then
 	echo "usage: ./setup.sh /path/to/corewar/folder"
+	exit 1
+fi
+if [ ! -d "$1" ]
+then
+	printerr "$1 is not a directory."
 	exit 1
 fi
 
@@ -84,15 +89,19 @@ else
 		fi
 	done
 fi
-full_line_regex="/11.*22.*33.*44.*55.*66.*77.*88.*99.*AA.*BB.*CC.*DD.*EE.*FF(${dump_delimiter}[0-9|A-F]{2})*/"
-dump_line_size=$(echo "$output" | awk "match(toupper(\$0), $full_line_regex) {print RLENGTH}")
+full_line_regex=$(printf "/11.*22.*33.*44.*55.*66.*77.*88.*99.*AA.*BB.*CC.*DD.*EE.*FF(${dump_delimiter}[0-9|A-F]{2})*/" | tr a-z A-Z)
+dump_line_size=$(echo "$output" | awk "match(toupper(\$0), ${full_line_regex}) {print RLENGTH}")
 let "dump_line_end = dump_line_start + dump_line_size - 1"
 output_end=$(echo "$output" | wc -l)
 dump_end=$output_end
 while [ $dump_end -ge $dump_start ]
 do
 	dump=$(echo "$output" | sed -n "${dump_start},${dump_end}p" | cut -c $dump_line_start-$dump_line_end)
-	dump_raw=$(echo "$dump" | sed "s/$dump_delimiter//g" | tr -d '\n')
+	if [ -z "$dump_delimiter" ] ; then
+		dump_raw=$(echo "$dump" | tr -d '\n')
+	else
+		dump_raw=$(echo "$dump" | sed "s/$dump_delimiter//g" | tr -d '\n')
+	fi
 	byte_count=$(printf "$dump_raw" | wc -c)
 	if [ $byte_count -le 8192 ] ; then
 		break
@@ -120,12 +129,14 @@ then
 	printerr "Unable to modify user.info"
 	exit 1
 fi
-echo "$1path to corewar folder
-$dump_sizenumber of lines in dump
-$lines_after_dumpnumber of extra lines following dump (if any)
-$dump_line_startindex in a dump line at which the hex starts
-$dump_line_endindex in a dump line at which the hex ends
-$victory_formatformat of victory message" | column -t -s '' > user.info
+echo "$1path to corewar folder
+-dumpdump flag
+$dump_sizenumber of lines in dump
+$lines_after_dumpnumber of extra lines following dump (if any)
+$dump_line_startindex in a dump line at which the hex starts
+$dump_line_endindex in a dump line at which the hex ends
+$dump_delimiterdelimiter between octets
+$victory_formatformat of victory message" | column -t -s '' > user.info
 if [ ! -f user.info ]
 then
 	printerr "Failed to write to user.info"
@@ -134,5 +145,6 @@ fi
 
 # Output results
 printf "${c_green}Setup ran successfully.${c_off}\n"
-echo "The following information was obtained about your corewar program. If anything is incorrect, modify user.info accordingly."
+echo "The following information was obtained about your corewar program."
+echo "If anything is incorrect, modify user.info accordingly."
 cat user.info | sed -e 's/^/	/'
