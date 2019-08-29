@@ -105,7 +105,7 @@ then
 	echo "Make sure that MEM_SIZE is 4096 in op.h, that the dump is on contiguous lines, and that all the format of dump lines is consistent."
 	exit 1
 fi
-if [[ ! "$dump_raw" =~ ^112233445566778899AABBCCDDEEFF0*$ ]]
+if [[ ! "$dump_raw" =~ ^112233445566778899(AABBCCDDEEFF|aabbccddeeff)0*$ ]]
 then
 	printerr "Dump did not match expected output."
 	exit 1
