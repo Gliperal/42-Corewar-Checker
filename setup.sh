@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 source colors.sh
 
@@ -57,20 +57,43 @@ then
 	printerr "corewar returned exit status $status."
 	exit 1
 fi
-stripped_output=$(echo "$output" | sed "s/[[:space:]]//g")
-dump_start=$(echo "$stripped_output" | grep -Fnm 1 "112233445566778899AABBCCDDEEFF" | tail -1 | cut -f 1 -d ':')
-if [ -z $dump_start ]
+match=$(echo "$output" | awk 'match(toupper($0), /11.*22.*33.*44.*55.*66.*77.*88.*99.*AA.*BB.*CC.*DD.*EE.*FF/) {print NR, RSTART, RLENGTH}' | tail -1)
+if [ -z "$match" ]
 then
 	printerr "Failed to identify dump in output."
 	exit 1
 fi
-
-output_end=$(echo "$stripped_output" | wc -l)
+read dump_start dump_line_start match_size <<< $match
+let "match_end = dump_line_start + match_size - 1"
+match=$(echo "$output" | sed -n "${dump_start}p" | cut -c $dump_line_start-$match_end)
+capture_regex="11(.*)22(.*)33(.*)44(.*)55(.*)66(.*)77(.*)88(.*)99(.*)(AA|aa)(.*)(BB|bb)(.*)(CC|cc)(.*)(DD|dd)(.*)(EE|ee)(.*)(FF|ff)"
+if [[ ! $match =~ $capture_regex ]]
+then
+	printerr "An unknown error occured."
+	echo "Note: this error is most likely caused by inconsistent uppercase/lowercase in the dump output."
+	exit 1
+else
+	dump_delimiter="${BASH_REMATCH[1]}"
+	for i in 2 3 4 5 6 7 8 9 11 13 15 17 19
+	do
+		if [ "${BASH_REMATCH[$i]}" != "$dump_delimiter" ]
+		then
+			printerr "Multiple delimiters found in corewar dump (\"$dump_delimiter\" != \"${BASH_REMATCH[$i]}\")."
+			echo "Make sure separators between octets in the dump are consistent."
+			exit 1
+		fi
+	done
+fi
+full_line_regex="/11.*22.*33.*44.*55.*66.*77.*88.*99.*AA.*BB.*CC.*DD.*EE.*FF(${dump_delimiter}[0-9|A-F]{2})*/"
+dump_line_size=$(echo "$output" | awk "match(toupper(\$0), $full_line_regex) {print RLENGTH}")
+let "dump_line_end = dump_line_start + dump_line_size - 1"
+output_end=$(echo "$output" | wc -l)
 dump_end=$output_end
 while [ $dump_end -ge $dump_start ]
 do
-	dump=$(echo "$stripped_output" | sed -n "${dump_start},${dump_end}p")
-	byte_count=$(echo "$dump" | tr -d '\n' | wc -c)
+	dump=$(echo "$output" | sed -n "${dump_start},${dump_end}p" | cut -c $dump_line_start-$dump_line_end)
+	dump_raw=$(echo "$dump" | sed "s/$dump_delimiter//g" | tr -d '\n')
+	byte_count=$(printf "$dump_raw" | wc -c)
 	if [ $byte_count -le 8192 ] ; then
 		break
 	fi
@@ -79,10 +102,10 @@ done
 if [ $byte_count -ne 8192 ]
 then
 	printerr "Could not match dump in output."
-	echo "Make sure that MEM_SIZE is 4096 in op.h, that the dump is on contiguous lines containing no other information, and that the only delimiters in the dump zone are whitespace."
+	echo "Make sure that MEM_SIZE is 4096 in op.h, that the dump is on contiguous lines, and that all the format of dump lines is consistent."
 	exit 1
 fi
-if [[ ! $(echo "$dump" | tr -d '\n') =~ ^112233445566778899AABBCCDDEEFF0*$ ]]
+if [[ ! "$dump_raw" =~ ^112233445566778899AABBCCDDEEFF0*$ ]]
 then
 	printerr "Dump did not match expected output."
 	exit 1
@@ -100,6 +123,8 @@ fi
 echo "$1path to corewar folder
 $dump_sizenumber of lines in dump
 $lines_after_dumpnumber of extra lines following dump (if any)
+$dump_line_startindex in a dump line at which the hex starts
+$dump_line_endindex in a dump line at which the hex ends
 $victory_formatformat of victory message" | column -t -s '' > user.info
 if [ ! -f user.info ]
 then

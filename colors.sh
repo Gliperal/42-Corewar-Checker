@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 #c_black=$(tput setaf 0)
 #c_red=$(tput setaf 1)
