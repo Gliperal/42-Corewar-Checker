@@ -1,3 +1,7 @@
+#!/bin/bash
+
+source colors.sh
+
 function zero_pad {
 	to_pad=$1
 	new_size=$2
@@ -30,11 +34,20 @@ then
 	comment=$3
 fi
 
-
 # Validate first argument as bytecode and trim space
+if ! [[ "$1" =~ ^[[:space:]0-9a-fA-F]*$ ]]
+then
+	printerr "Argument 1 not well formatted. Expected hexadecimal string of the format \"XX XX ...\""
+	exit 1
+fi
 bytecode=$(echo "$1" | tr -d "[:space:]")
 
 # Calculate size and convert from integer to hex
+if (( ${#bytecode} % 2 ))
+then
+	printerr "Bytecode should be in full octets. (Expected an even number of hex; got ${#bytecode})."
+	exit 1
+fi
 let "size = ${#bytecode} / 2"
 size_hex=$(printf "%.8x\n" $size)
 

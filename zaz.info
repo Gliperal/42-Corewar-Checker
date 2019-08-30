@@ -4,5 +4,5 @@
 0                                  number of extra lines following dump (if any)
 10                                 index in a dump line at which the hex starts
 200                                index in a dump line at which the hex ends
-                                   delimiter between octets
+                                   delimiter between octets (if any)
 Contestant NUM, "NAME", has won !  format of victory message

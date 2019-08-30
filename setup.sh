@@ -135,7 +135,7 @@ $dump_sizenumber of lines in dump
 $lines_after_dumpnumber of extra lines following dump (if any)
 $dump_line_startindex in a dump line at which the hex starts
 $dump_line_endindex in a dump line at which the hex ends
-$dump_delimiterdelimiter between octets
+$dump_delimiterdelimiter between octets (if any)
 $victory_formatformat of victory message" | column -t -s '' > user.info
 if [ ! -f user.info ]
 then

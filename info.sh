@@ -2,6 +2,8 @@
 
 source colors.sh
 
+# TODO Only re-evaluate if variables file has changed
+
 if [ ! -f "$corewar_info_file" ]
 then
 	printerr "$corewar_info_file is not a file."
