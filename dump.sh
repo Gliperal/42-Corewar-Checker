@@ -18,7 +18,7 @@ output=$($corewar $2 $dump_flag $3)
 dump=$(echo "$output" | tail -n $dump_tail | head -n $dump_size | cut -c $dump_line_start-$dump_line_end)
 if [ -z "$dump_delimiter" ]
 then
-	echo "$dump" | tr -d '\n'
+	echo "$dump" | tr -d '\n' | tr 'a-f' 'A-F'
 else
-	echo "$dump" | sed "s/$dump_delimiter//g" | tr -d '\n'
+	echo "$dump" | sed "s/$dump_delimiter//g" | tr -d '\n' | tr 'a-f' 'A-F'
 fi
