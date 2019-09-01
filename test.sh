@@ -5,7 +5,7 @@ source colors.sh
 # Error checking
 if [ $# -lt 2 ] || [ -z $1 ]
 then
-	echo "usage: ./test.sh cycle1,cycle2 bytecode1 bytecode2 ..."
+	echo "usage: ./test.sh cycle1,cycle2,... bytecode1 bytecode2 ..."
 	exit 0
 fi
 if ! [[ "$1" =~ ^([0-9],?)+$ ]]
