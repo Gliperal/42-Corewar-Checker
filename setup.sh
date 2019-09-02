@@ -54,11 +54,11 @@ victory_format=$(echo "$victory_message" | sed 's/1/NUM/1')
 
 # Extract dump format
 sh makeChampion.sh "11 22 33 44 55 66 77 88 99 AA BB CC DD EE FF" > /tmp/alphabet.cor
-output=$($corewar /tmp/alphabet.cor -dump 1)
+output=$($corewar -dump 1 /tmp/alphabet.cor)
 status=$?
 if [ $status != 0 ]
 then
-	printf "${c_lred}Failed to run ${c_yellow}$corewar /tmp/alphabet.cor -dump 1${c_off}\n"
+	printf "${c_lred}Failed to run ${c_yellow}$corewar -dump 1 /tmp/alphabet.cor${c_off}\n"
 	printerr "corewar returned exit status $status."
 	exit 1
 fi

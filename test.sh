@@ -53,14 +53,14 @@ done
 for cycle in $cycles
 do
 	# Generate dump files
-	sh dump.sh zaz.info "$champs" $cycle > /tmp/cor_expected_dump
+	sh dump.sh zaz.info $cycle "$champs" > /tmp/cor_expected_dump
 	if [ $? -ne 0 ]
 	then
 		echo
 		printerr "Failed to dump zaz's corewar."
 		exit 1
 	fi
-	sh dump.sh user.info "$champs" $cycle > /tmp/cor_actual_dump
+	sh dump.sh user.info $cycle "$champs" > /tmp/cor_actual_dump
 	if [ $? -ne 0 ]
 	then
 		echo
