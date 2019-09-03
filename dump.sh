@@ -1,17 +1,20 @@
 #!/bin/bash
 
 source colors.sh
+source info.sh
 
 # Validate parameters
 if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]
 then
-	echoerr "usage: ./dump.sh corewar.info cycles \"champ1 champ2 ...\""
+	echoerr "usage: $0 corewar.info cycles \"champ1 champ2 ...\""
 	exit 1
 fi
 
 # Extract variables from .info file
-corewar_info_file=$1
-source info.sh
+load_corewar_info_file $1
+if [ $? -ne 0 ] ; then
+	exit 1
+fi
 
 # Make dump
 output=$($corewar $dump_flag $2 $3)

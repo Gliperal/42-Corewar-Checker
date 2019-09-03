@@ -4,7 +4,7 @@ source colors.sh
 
 if [ -z "$1" ]
 then
-	echo "usage: ./setup.sh /path/to/corewar/folder"
+	echo "usage: $0 /path/to/corewar/folder"
 	exit 1
 fi
 if [ ! -d "$1" ]
@@ -29,7 +29,7 @@ corewar=$1/corewar
 
 echo "Extracting information..."
 # Extract victory message
-sh makeChampion.sh "" NAME > /tmp/empty.cor
+sh makeChampion.sh "" __NAME__ > /tmp/empty.cor
 if [ ! -f /tmp/empty.cor ]
 then
 	printerr "makeChampion.sh failed to create champion."
@@ -43,14 +43,14 @@ then
 	printerr "corewar returned exit status $status."
 	exit 1
 fi
-victory_message=$(echo "$output" | grep NAME | tail -1)
+victory_message=$(echo "$output" | grep __NAME__ | tail -1)
 if [ -z "$victory_message" ]
 then
 	printerr "Could not locate victory message."
 	echo "Make sure corewar outputs something like \"My Awesome Champion (player 3) won!\""
 	exit 1
 fi
-victory_format=$(echo "$victory_message" | sed 's/1/NUM/1')
+victory_format=$(echo "$victory_message" | sed 's/1/__NUM__/1')
 
 # Extract dump format
 sh makeChampion.sh "11 22 33 44 55 66 77 88 99 AA BB CC DD EE FF" > /tmp/alphabet.cor

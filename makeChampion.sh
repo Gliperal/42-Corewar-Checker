@@ -20,7 +20,7 @@ comment="This champion was made using makeChampion.sh"
 # Verify existence of first argument
 if [ $# -eq 0 ] ;
 then
-	echo "usage: makeChampion.sh bytecode [name [comment]]"
+	echo "usage: $0 bytecode [name [comment]]"
 	exit 1
 fi
 

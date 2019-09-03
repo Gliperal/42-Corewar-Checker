@@ -2,52 +2,77 @@
 
 source colors.sh
 
-# TODO Only re-evaluate if variables file has changed
+function load_corewar_info_file
+{
+	if [ -z "$1" ]
+	then
+		printerr "Must specify a file"
+		return 1
+	fi
+	if [ ! -f "$1" ]
+	then
+		printerr "$1 is not a file."
+		return 1
+	fi
+	if [ "$1" = "$corewar_info_file" ]
+	then
+		# the info file hasn't changed since the last time info was ran
+		return 0
+	fi
+	_corewar_info_file=$1
 
-if [ ! -f "$corewar_info_file" ]
-then
-	printerr "$corewar_info_file is not a file."
-	exit 1
-fi
+	# Read variables
+	vars=$(cat $_corewar_info_file | cut -d '' -f 1)
+	_corewar_folder=$(echo "$vars" | sed -n 1p)
+	_dump_flag=$(echo "$vars" | sed -n 2p)
+	_dump_size=$(echo "$vars" | sed -n 3p)
+	_lines_after_dump=$(echo "$vars" | sed -n 4p)
+	_dump_line_start=$(echo "$vars" | sed -n 5p)
+	_dump_line_end=$(echo "$vars" | sed -n 6p)
+	_dump_delimiter=$(echo "$vars" | sed -n 7p)
+	_victory_format=$(echo "$vars" | sed -n 8p)
+	if	[ -z "$_corewar_folder" ] || \
+		[ -z "$_dump_flag" ] || \
+		[ -z "$_dump_line_start" ] || \
+		[ -z "$_dump_line_end" ] || \
+		[ -z "$_victory_format" ]
+	then
+		printerr "Unable to parse $_corewar_info_file"
+		return 1
+	fi
+	num_regex="^[0-9]+"
+	if	[[ ! $_dump_size =~ $num_regex ]] || \
+		[[ ! $_lines_after_dump =~ $num_regex ]]
+	then
+		printerr "Unable to parse $_corewar_info_file"
+		return 1
+	fi
+	let "_dump_tail = _dump_size + _lines_after_dump"
 
-# Read variables
-vars=$(cat $corewar_info_file | cut -d '' -f 1)
-corewar_folder=$(echo "$vars" | sed -n 1p)
-dump_flag=$(echo "$vars" | sed -n 2p)
-dump_size=$(echo "$vars" | sed -n 3p)
-lines_after_dump=$(echo "$vars" | sed -n 4p)
-dump_line_start=$(echo "$vars" | sed -n 5p)
-dump_line_end=$(echo "$vars" | sed -n 6p)
-dump_delimiter=$(echo "$vars" | sed -n 7p)
-victory_format=$(echo "$vars" | sed -n 8p)
-if	[ -z "$corewar_folder" ] || \
-	[ -z "$dump_flag" ] || \
-	[ -z "$dump_line_start" ] || \
-	[ -z "$dump_line_end" ] || \
-	[ -z "$victory_format" ]
-then
-	printerr "Unable to parse $corewar_info_file"
-	exit 1
-fi
-num_regex="^[0-9]+"
-if	[[ ! $dump_size =~ $num_regex ]] || \
-	[[ ! $lines_after_dump =~ $num_regex ]]
-then
-	printerr "Unable to parse $corewar_info_file"
-	exit 1
-fi
-let "dump_tail = dump_size + lines_after_dump"
+	# Make corewar
+	make -C $_corewar_folder corewar > /dev/null
+	if [ $? != 0 ]
+	then
+		printerr "Failed to make corewar executable."
+		echoerr "Make sure that a Makefile exists in $_corewar_folder and that it has the \"corewar\" rule."
+		return 1
+	elif [ ! -f $_corewar_folder/corewar ]
+	then
+		printerr "Makefile ran but no corewar file was created."
+		return 1
+	fi
 
-# Make corewar
-make -C $corewar_folder corewar > /dev/null
-if [ $? != 0 ]
-then
-	printerr "Failed to make corewar executable."
-	echoerr "Make sure that a Makefile exists in $corewar_folder and that it has the \"corewar\" rule."
-	exit 1
-elif [ ! -f $corewar_folder/corewar ]
-then
-	printerr "Makefile ran but no corewar file was created."
-	exit 1
-fi
-corewar=$corewar_folder/corewar
+	# Once we're sure there are no errors, update the shell variables
+	corewar_info_file=$_corewar_info_file
+	corewar_folder=$_corewar_folder
+	dump_flag=$_dump_flag
+	dump_size=$_dump_size
+	lines_after_dump=$_lines_after_dump
+	dump_line_start=$_dump_line_start
+	dump_line_end=$_dump_line_end
+	dump_delimiter=$_dump_delimiter
+	victory_format=$_victory_format
+	dump_tail=$_dump_tail
+	corewar=$corewar_folder/corewar
+	return 0
+}
