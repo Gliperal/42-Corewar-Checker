@@ -142,7 +142,6 @@ function victory_message_test
 	if [ "$output" = "$msg" ]
 	then
 		printf "${c_green}OK${c_off}\n"
-		echo $msg
 		return 0
 	fi
 	printf "${c_red}KO${c_off}\n"
