@@ -34,8 +34,12 @@ function test_suite
 	if [ -z "$num_failed" ] ; then
 		num_failed=0
 	fi
+	if [ -z "$num_passed" ] ; then
+		num_passed=0
+	fi
 	suite_num_total=0
 	suite_num_failed=0
+	suite_num_passed=0
 
 	let "run_str_width = 40 + ${#1}"
 	while read test; do
@@ -52,6 +56,8 @@ function test_suite
 			let "num_failed++"
 		else
 			printf "${c_green}OK${c_off}\n"
+			let "num_passed++"
+			let "suite_num_passed++"
 		fi
 		let "num_total++"
 		let "suite_num_total++"
@@ -60,7 +66,8 @@ function test_suite
 	printf "    "
 	echo "$1-------------------------------------------" | sed "s/./-/g"
 
-	echo "    $suite_num_failed tests failed out of $suite_num_total total tests."
+	percent_passed=$(echo "100 * $suite_num_passed / $suite_num_total" | bc)
+	echo "    $suite_num_passed tests passed out of $suite_num_total total tests (${percent_passed}%)."
 
 	echo "$1===================================================" | sed "s/./=/g"
 	echo
@@ -79,6 +86,7 @@ test_suite "Concurrent modification" "$(cat tests/overwrite.sh)"
 # test_suite "" "$(cat tests/.sh)"
 # TODO Randomly generated tests
 # test_suite "" "$(cat tests/.sh)"
+# TODO -n flag tests
 
 echo "$num_failed tests failed out of $num_total total tests."
 if (( $num_failed ))

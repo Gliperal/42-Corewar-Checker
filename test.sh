@@ -40,7 +40,7 @@ for bytecode in "${@:1}"
 do
 	printf " \"$bytecode\""
 done
-printf " ... "
+printf "\n"
 
 # Creation of test champion(s)
 i=1
@@ -50,7 +50,6 @@ do
 	./makeChampion.sh "$bytecode" "test_champ_$i" > /tmp/champ$i.cor
 	if [ $? -ne 0 ]
 	then
-		echo
 		printerr "Champion creation failed."
 		exit 1
 	fi
@@ -61,33 +60,36 @@ done
 # Test the diff at the end of various cycles
 function cycle_dump_test
 {
+	printf "Cycle"
 	for cycle in $cycles
 	do
+		printf " $cycle"
+
 		# Generate dump files
 		sh dump.sh zaz.info $cycle "$champs" > /tmp/cor_expected_dump
 		if [ $? -ne 0 ]
 		then
-			echo
 			printerr "Failed to dump zaz's corewar."
 			exit 1
 		fi
 		sh dump.sh user.info $cycle "$champs" > /tmp/cor_actual_dump
 		if [ $? -ne 0 ]
 		then
-			echo
 			printerr "Failed to dump user's corewar."
 			exit 1
 		fi
 
 		# Compare
 		diff=$(diff /tmp/cor_expected_dump /tmp/cor_actual_dump)
-		if [ ! -z "$diff" ]
+		if [ -z "$diff" ]
 		then
-			printf "${c_red}KO (cycle $cycle)${c_off}\n"
+			printf " (${c_green}OK${c_off})"
+		else
+			printf " (${c_red}KO${c_off})\n"
 			return 1
 		fi
 	done
-	printf "${c_green}OK${c_off}\n"
+	echo
 	return 0
 }
 
@@ -103,7 +105,6 @@ function victory_message_test
 	status=$?
 	if [ $status -ne 0 ]
 	then
-		echo
 		printerr "zaz's corewar returned exit status $status."
 		exit 1
 	fi
@@ -113,7 +114,6 @@ function victory_message_test
 	do
 		if [ $i -eq 5 ]
 		then
-			echo
 			printerr "Could not parse zaz's victory message."
 			exit 1
 		fi
@@ -132,7 +132,6 @@ function victory_message_test
 	output=$($corewar $champs | tail -1)
 	if [ $status -ne 0 ]
 	then
-		echo
 		printerr "corewar returned exit status $status."
 		exit 1
 	fi
