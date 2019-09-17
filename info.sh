@@ -24,18 +24,21 @@ function load_corewar_info_file
 	# Read variables
 	vars=$(cat $_corewar_info_file | cut -d '' -f 1)
 	_corewar_folder=$(echo "$vars" | sed -n 1p)
-	_dump_flag=$(echo "$vars" | sed -n 2p)
-	_dump_size=$(echo "$vars" | sed -n 3p)
-	_lines_after_dump=$(echo "$vars" | sed -n 4p)
-	_dump_line_start=$(echo "$vars" | sed -n 5p)
-	_dump_line_end=$(echo "$vars" | sed -n 6p)
-	_dump_delimiter=$(echo "$vars" | sed -n 7p)
-	_victory_format=$(echo "$vars" | sed -n 8p)
+	_args_regular=$(echo "$vars" | sed -n 2p)
+	_args_dump=$(echo "$vars" | sed -n 3p)
+	_dump_size=$(echo "$vars" | sed -n 4p)
+	_lines_after_dump=$(echo "$vars" | sed -n 5p)
+	_dump_line_start=$(echo "$vars" | sed -n 6p)
+	_dump_line_end=$(echo "$vars" | sed -n 7p)
+	_dump_delimiter=$(echo "$vars" | sed -n 8p)
+	_victory_format=$(echo "$vars" | sed -n 9p)
 	if	[ -z "$_corewar_folder" ] || \
-		[ -z "$_dump_flag" ] || \
 		[ -z "$_dump_line_start" ] || \
 		[ -z "$_dump_line_end" ] || \
-		[ -z "$_victory_format" ]
+		[ -z "$_victory_format" ] || \
+		! [[ $_args_regular == *"__CHAMPS__"* ]] || \
+		! [[ $_args_dump == *"__CHAMPS__"* ]] || \
+		! [[ $_args_dump == *"__CYCLE__"* ]]
 	then
 		printerr "Unable to parse $_corewar_info_file"
 		return 1
@@ -65,7 +68,8 @@ function load_corewar_info_file
 	# Once we're sure there are no errors, update the shell variables
 	corewar_info_file=$_corewar_info_file
 	corewar_folder=$_corewar_folder
-	dump_flag=$_dump_flag
+	args_regular=$_args_regular
+	args_dump=$_args_dump
 	dump_size=$_dump_size
 	lines_after_dump=$_lines_after_dump
 	dump_line_start=$_dump_line_start

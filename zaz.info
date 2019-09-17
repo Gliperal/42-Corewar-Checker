@@ -1,5 +1,6 @@
 .                                          path to corewar folder
--d                                         dump flag
+__CHAMPS__                                 regular usage
+-d __CYCLE__ __CHAMPS__                    dump usage
 64                                         number of lines in dump
 0                                          number of extra lines following dump (if any)
 10                                         index in a dump line at which the hex starts

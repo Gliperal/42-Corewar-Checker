@@ -130,7 +130,8 @@ then
 	exit 1
 fi
 echo "$1path to corewar folder
--dumpdump flag
+__CHAMPS__command line args (regular usage)
+-dump __CYCLE__ __CHAMPS__command line args (dump after cycles)
 $dump_sizenumber of lines in dump
 $lines_after_dumpnumber of extra lines following dump (if any)
 $dump_line_startindex in a dump line at which the hex starts

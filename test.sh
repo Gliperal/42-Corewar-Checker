@@ -96,12 +96,16 @@ function cycle_dump_test
 # Test the content of the victory message
 function victory_message_test
 {
+	# escape the champs (for use with sed later)
+	champs_escaped=$(echo $champs | sed -e 's/[\/&]/\\&/g')
+
 	# Obtain the expected victory message
 	load_corewar_info_file zaz.info
 	if [ $? -ne 0 ] ; then
 		exit 1
 	fi
-	output=$($corewar $champs | tail -1)
+	args=$(echo "$args_regular" | sed "s/__CHAMPS__/$champs_escaped/")
+	output=$($corewar $args | tail -1)
 	status=$?
 	if [ $status -ne 0 ]
 	then
@@ -129,7 +133,8 @@ function victory_message_test
 	if [ $? -ne 0 ] ; then
 		exit 1
 	fi
-	output=$($corewar $champs | tail -1)
+	args=$(echo "$args_regular" | sed "s/__CHAMPS__/$champs_escaped/")
+	output=$($corewar $args | tail -1)
 	if [ $status -ne 0 ]
 	then
 		printerr "corewar returned exit status $status."
