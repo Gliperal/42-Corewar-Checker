@@ -82,8 +82,7 @@ test_suite "CYCLE_TO_DIE" "$(cat tests/cycle_to_die.sh)"
 test_suite "Process order" "$(cat tests/order.sh)"
 test_suite "Invalid instruction" "$(cat tests/bad_instruction.sh)"
 test_suite "Concurrent modification" "$(cat tests/overwrite.sh)"
-# TODO Simple program tests
-# test_suite "" "$(cat tests/.sh)"
+test_suite "Full programs" "$(cat tests/program.sh)"
 # TODO Randomly generated tests
 # test_suite "" "$(cat tests/.sh)"
 # TODO -n flag tests

@@ -20,7 +20,7 @@ fi
 # Error checking
 if [ $# -eq 0 ]
 then
-	echo "usage: $0 [-c cycle1,cycle2,...] bytecode1 bytecode2 ..."
+	printf "usage: $0 [-c cycles] champ1 champ2 ...\n  cycles: comma separated list of cycles to check (e.g. 42,43,44)\n  champ: either a .cor file or the raw bytecode in hexadecimal\n"
 	exit 0
 fi
 if ! [ -f zaz.info ]
@@ -36,25 +36,32 @@ fi
 
 # Print test header
 printf "Running test"
-for bytecode in "${@:1}"
+for champ in "${@:1}"
 do
-	printf " \"$bytecode\""
+	printf " \"$champ\""
 done
 printf "\n"
 
 # Creation of test champion(s)
 i=1
 champs=""
-for bytecode in "${@:1}"
+for champ in "${@:1}"
 do
-	./makeChampion.sh "$bytecode" "test_champ_$i" > /tmp/champ$i.cor
-	if [ $? -ne 0 ]
+	if [ -f "$champ" ]
 	then
-		printerr "Champion creation failed."
-		exit 1
+		# Champion from file
+		champs="$champs $champ"
+	else
+		# Champion from bytecode
+		./makeChampion.sh "$champ" "test_champ_$i" > /tmp/champ$i.cor
+		if [ $? -ne 0 ]
+		then
+			printerr "Champion creation failed."
+			exit 1
+		fi
+		champs="$champs /tmp/champ$i.cor"
+		let "i++"
 	fi
-	champs="$champs /tmp/champ$i.cor"
-	let "i++"
 done
 
 # Test the diff at the end of various cycles
